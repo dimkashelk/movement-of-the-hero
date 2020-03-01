@@ -2,7 +2,7 @@ import pygame
 import os
 
 pygame.init()
-MONITOR_width, MONITOR_height = 500, 500
+MONITOR_width, MONITOR_height = 200, 200
 size = (MONITOR_width, MONITOR_height)
 screen = pygame.display.set_mode(size)
 
@@ -33,6 +33,24 @@ def load_level(filename):
 tile_images = {'wall': load_image('box.png'), 'empty': load_image('grass.png')}
 player_image = load_image('mario.png')
 tile_width = tile_height = 50
+width = height = 200
+
+
+class Camera:
+    # зададим начальный сдвиг камеры
+    def __init__(self):
+        self.dx = 0
+        self.dy = 0
+
+    # сдвинуть объект obj на смещение камеры
+    def apply(self, obj):
+        obj.rect.x += self.dx
+        obj.rect.y += self.dy
+
+    # позиционировать камеру на объекте target
+    def update(self, target):
+        self.dx = -(target.rect.x + target.rect.w // 2 - width // 2)
+        self.dy = -(target.rect.y + target.rect.h // 2 - height // 2)
 
 
 class Tile(pygame.sprite.Sprite):
@@ -85,7 +103,11 @@ try:
 except FileNotFoundError:
     print('File not found!')
     exit(0)
+camera = Camera()
 player, level_x, level_y, player_x, player_y = generate_level(card)
+camera.update(player)
+for sprite in all_sprites:
+    camera.apply(sprite)
 while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -99,29 +121,27 @@ while running:
                     player_y -= 1
                 if card[player_x][player_y] == '#':
                     player_y -= 1
-                print(player_x, player_y)
             elif event.key == pygame.K_UP:
                 player_y -= 1
                 if player_y >= level_y:
                     player_y += 1
                 if card[player_x][player_y] == '#':
                     player_y += 1
-                print(player_x, player_y, player)
             elif event.key == pygame.K_RIGHT:
                 player_x += 1
                 if player_x >= level_x:
                     player_x -= 1
                 if card[player_x][player_y] == '#':
                     player_x -= 1
-                print(player_x, player_y)
             elif event.key == pygame.K_LEFT:
                 player_x -= 1
                 if player_x >= level_x:
                     player_x += 1
                 if card[player_x][player_y] == '#':
                     player_x += 1
-                print(player_x, player_y, player)
             player.move(player_x, player_y)
+    camera.update(player)
+    for sprite in all_sprites:
+        camera.apply(sprite)
     all_sprites.draw(screen)
-    clock.tick(fps)
     pygame.display.flip()
