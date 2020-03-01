@@ -80,7 +80,11 @@ screen.blit(fon, (0, 0))
 fps = 60
 clock = pygame.time.Clock()
 running = True
-card = load_level('level.txt')
+try:
+    card = load_level(input())
+except FileNotFoundError:
+    print('File not found!')
+    exit(0)
 player, level_x, level_y, player_x, player_y = generate_level(card)
 while running:
     for event in pygame.event.get():
